@@ -118,11 +118,17 @@ made before these names existed keep working unchanged.
 
 The short name is used wherever an item is shown: on the sign, in `/shopinfo`, in trade
 messages, in the `/find` title, results and suggestions, and on the Explorer. You can type
-it into `/find`. Shops and sales recorded before this keep their older name until the shop
-is next seen by the server (`/find resync` refreshes loaded areas); past sales keep theirs.
+it into `/find`. Where a command takes the item as one word, such as `/chestshop give`,
+write it with underscores: `Bk_Sharpness_V`.
 
-Two things still use the full `Name#code` form, because it identifies the exact item:
-wildcard signs (such as `Potion*`) and the **Full Name** line in `/iteminfo`.
+A shop recorded before this picks up its readable name the next time the server scans it:
+when its area next loads, or when an admin runs `/chestshop resync <chunks>`. Sales already
+recorded keep the name they were recorded with.
+
+Three things still use the full `Name#code` form, because it identifies the exact item:
+wildcard signs (such as `Potion*`), the **Full Name** line in `/iteminfo`, and per-item
+permission nodes. A denial such as `ChestShop.shop.buy.EnchantedBook#Eg` applies to that
+item whatever name its shop sign shows.
 
 > [!TIP]
 > Not sure what an item is called? Hold it and run `/iteminfo`. You can also look one up

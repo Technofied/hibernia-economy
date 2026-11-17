@@ -303,8 +303,12 @@ Treasury and Business so a sale can pay a player or a firm.
   (`getItemList`), `/chestshop give`, the sale's ledger memo, the registry `item_name`
   and the `/find` title and suggestions use it. `getName`/`wildcardName` stay the
   identity for `item_key`, wildcards, permission suffixes, the shop log and
-  `/iteminfo`'s Full Name; never key on a display name. Stored `item_name` values change
-  only when a shop is re-observed or a new sale is recorded. Names are in code, not config,
+  `/iteminfo`'s Full Name; never key on a display name. A sign line is display text too:
+  `TradeValidatorImpl` looks up item-specific buy/sell denials by the traded item's
+  stored code (full and sign-width forms), not by a `#` in the sign line, as
+  `ShopServiceImpl` does for creation. A shop's stored `item_name` is rewritten whenever
+  its chunk is scanned (chunk load, startup, `/chestshop resync`); a sale's is fixed when
+  recorded. Names are in code, not config,
   because a name is persisted on every sign that uses it;
   renaming one strands those signs. An item gets a shorthand only if
   `MaterialService.equals` matches it to the plain item the name parses back to, which
