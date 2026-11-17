@@ -162,12 +162,13 @@ public class ShorthandItemCodec {
         return materials.equals(item, plainItems.get(name.toLowerCase(Locale.ROOT))) ? name : null;
     }
 
-    /** The plain item a shorthand stands for (matched case-insensitively), or {@code null}. */
+    /** The plain item a shorthand stands for, ignoring case and reading {@code _} as a space, or {@code null}. */
     public ItemStack decode(String name) {
         if (name == null) {
             return null;
         }
-        ItemStack plain = plainItems.get(name.toLowerCase(Locale.ROOT));
+        // Commands such as /chestshop give take the item as one word, so accept "Bk_Sharpness_V".
+        ItemStack plain = plainItems.get(name.toLowerCase(Locale.ROOT).replace('_', ' '));
         return plain == null ? null : plain.clone();
     }
 

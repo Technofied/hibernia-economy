@@ -149,6 +149,12 @@ class ShorthandItemCodecTest extends ServerTest {
     }
 
     @Test
+    void decodeAcceptsUnderscoresForSpaces_soCommandsThatTakeOneWordCanNameTheItem() {
+        assertThat(codec().decode("Bk_Sharpness_V").isSimilar(book(Enchantment.SHARPNESS, 5)))
+                .isTrue();
+    }
+
+    @Test
     void decodeReturnsNullForAnythingThatIsNotAShorthand() {
         ShorthandItemCodec codec = codec();
         assertThat(codec.decode("Diamond")).isNull();
