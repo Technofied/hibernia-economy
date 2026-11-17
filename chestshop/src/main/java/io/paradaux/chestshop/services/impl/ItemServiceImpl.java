@@ -176,17 +176,33 @@ public class ItemServiceImpl implements ItemService {
 
     // ---- item display names (were the static ItemUtil helpers; PAR-282) ---------
 
-    /** A comma-joined "count name" list for a set of stacks (used in trade/give messages). */
+    /** A comma-joined "count display-name" list for a set of stacks (used in trade/give messages). */
     @Override
     public String getItemList(ItemStack[] items) {
         Map<ItemStack, Integer> itemCounts = inventoryService.getItemCounts(items);
 
         List<String> itemText = new ArrayList<>();
         for (Map.Entry<ItemStack, Integer> entry : itemCounts.entrySet()) {
-            itemText.add(entry.getValue() + " " + getName(entry.getKey()));
+            itemText.add(entry.getValue() + " " + getDisplayName(entry.getKey()));
         }
 
         return String.join(", ", itemText);
+    }
+
+    @Override
+    public String getDisplayName(ItemStack item) {
+        String name = getName(item);
+        String shorthand = shorthands.encode(item);
+        if (shorthand == null) {
+            return name;
+        }
+        // A custom item, legacy listener or configured alias has already given it a name.
+        if (name != null && !name.equals(itemCodes.encode(item, 0))) {
+            return name;
+        }
+        // People type what they are shown. If an alias or custom item owns this shorthand,
+        // it would lead them to a different item, so show the stored code instead.
+        return materialService.equals(item, parse(shorthand)) ? shorthand : name;
     }
 
     /** The item's full (untruncated) ChestShop name/code. */

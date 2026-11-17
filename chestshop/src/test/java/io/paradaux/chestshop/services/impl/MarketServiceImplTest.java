@@ -311,6 +311,36 @@ class MarketServiceImplTest extends ServerTest {
     }
 
     @Test
+    void sale_recordsTheReadableNameButKeepsTheStoredCodeAsTheKey() {
+        ItemStack book = item(Material.ENCHANTED_BOOK, 1);
+        when(items.getName(book, 0)).thenReturn("Enchanted Book#Eg");
+        when(items.getDisplayName(book)).thenReturn("Spl Healing II");
+        when(itemCodes.encode(book, 0)).thenReturn("Enchanted Book#Eg");
+
+        Sign sign = signAt(0, 5, 0, "Owner", "1", "B 10", "Spl Healing II");
+        ChestShopSaleRecord rec = market.sale(
+                sign, book, 1, UUID.randomUUID(), personalOwner(), BigDecimal.TEN, BigDecimal.ZERO, "BUY", 1, 7L);
+
+        assertThat(rec.itemKey()).isEqualTo("Enchanted Book#Eg");
+        // Verbatim: prettifying a shorthand would turn "II" into "Ii".
+        assertThat(rec.itemName()).isEqualTo("Spl Healing II");
+    }
+
+    @Test
+    void sale_prettifiesTheKeyWhenTheDisplayNameIsNoMoreReadable() {
+        ItemStack book = item(Material.ENCHANTED_BOOK, 1);
+        when(items.getName(book, 0)).thenReturn("Enchanted Book#Eg");
+        when(items.getDisplayName(book)).thenReturn("Enchanted Book#Eg");
+        when(itemCodes.encode(book, 0)).thenReturn("Enchanted Book#Eg");
+
+        Sign sign = signAt(0, 5, 0, "Owner", "1", "B 10", "Enchanted Book#Eg");
+        ChestShopSaleRecord rec = market.sale(
+                sign, book, 1, UUID.randomUUID(), personalOwner(), BigDecimal.TEN, BigDecimal.ZERO, "BUY", 1, 7L);
+
+        assertThat(rec.itemName()).isEqualTo("Enchanted Book");
+    }
+
+    @Test
     void sale_personalOwner_customItemWithDisplayName() {
         ItemStack sword = item(Material.DIAMOND_SWORD, 1);
         ItemMeta meta = sword.getItemMeta();

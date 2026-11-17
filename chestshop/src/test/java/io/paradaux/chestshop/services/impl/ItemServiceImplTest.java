@@ -565,6 +565,66 @@ class ItemServiceImplTest extends ServerTest {
         assertThat(newService().parse("Bk Sharpness V").getType()).isEqualTo(Material.DIAMOND);
     }
 
+    // ---- display names (PAR-569) ---------------------------------------------------
+
+    @Test
+    void getDisplayName_usesTheShorthandAtAnyWidth() {
+        assertThat(newService().getDisplayName(sharpnessBook(0))).isEqualTo("Bk Sharpness V");
+    }
+
+    @Test
+    void getDisplayName_isTheOrdinaryNameForItemsWithoutAShorthand() {
+        var service = newService();
+        var diamond = new ItemStack(Material.DIAMOND);
+        assertThat(service.getDisplayName(diamond)).isEqualTo(service.getName(diamond));
+        // An anvil-merged book is a different item from the plain one, so it keeps its code.
+        assertThat(service.getDisplayName(sharpnessBook(1))).isEqualTo(service.getName(sharpnessBook(1)));
+    }
+
+    @Test
+    void getDisplayName_prefersAConfiguredAlias() {
+        var service = newService();
+        var book = sharpnessBook(0);
+        writeAliases(service.getName(book) + ": Sharp Tome\n");
+        service.reloadAliases();
+        assertThat(service.getDisplayName(book)).isEqualTo("Sharp Tome");
+    }
+
+    @Test
+    void getDisplayName_prefersACustomItemName() {
+        var service = newService();
+        var resolver = mock(CustomItemResolver.class);
+        when(resolver.queryString(any(), anyInt())).thenReturn("nexo_book");
+        when(resolver.parseItem("nexo_book")).thenReturn(sharpnessBook(0));
+        service.registerCustomItemResolver(resolver);
+        assertThat(service.getDisplayName(sharpnessBook(0))).isEqualTo("nexo_book");
+    }
+
+    @Test
+    void getDisplayName_keepsTheCodeWhenAnAliasGivesTheShorthandToAnotherItem() {
+        // "Bk Sharpness V" typed into /find or onto a sign would mean a diamond here.
+        writeAliases("Diamond: Bk Sharpness V\n");
+        var service = newService();
+        var book = sharpnessBook(0);
+        assertThat(service.getDisplayName(book)).isEqualTo(service.getName(book));
+    }
+
+    @Test
+    void getItemList_showsDisplayNames() {
+        var service = newService();
+        assertThat(service.getItemList(new ItemStack[] {sharpnessBook(0), new ItemStack(Material.DIAMOND, 3)}))
+                .contains("1 Bk Sharpness V")
+                .contains("3 " + service.getName(new ItemStack(Material.DIAMOND)));
+    }
+
+    @Test
+    void identityNamesStayTheStoredCode() {
+        var service = newService();
+        var book = sharpnessBook(0);
+        assertThat(service.getName(book, 0)).startsWith("Enchanted Book#");
+        assertThat(service.wildcardName(book)).startsWith("Enchanted Book#");
+    }
+
     @Test
     void getSignName_preservesConfiguredPotionAlias() {
         var svc = newService();

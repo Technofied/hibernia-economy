@@ -81,7 +81,7 @@ public final class FindCommand implements CommandHandler {
             message.send(player, "find.unknown-item", "code", code);
             return;
         }
-        openFind(player, item, canonicalKey(item), code);
+        openFind(player, item, canonicalKey(item), readableOr(item, code));
     }
 
     @Route("toggle visibility <visible>")
@@ -147,6 +147,23 @@ public final class FindCommand implements CommandHandler {
                 return name.trim();
             }
         }
-        return canonicalKey(item);
+        return readableOr(item, canonicalKey(item));
+    }
+
+    /**
+     * The item's display name when it says more than the stored code does (a potion or
+     * enchanted-book shorthand), else {@code fallback}. Only the dialog title uses it; the
+     * search itself always runs on {@link #canonicalKey}.
+     */
+    private String readableOr(ItemStack item, String fallback) {
+        try {
+            String name = items.getDisplayName(item);
+            if (name != null && !name.isBlank() && !name.equals(canonicalKey(item))) {
+                return name;
+            }
+        } catch (RuntimeException ignored) {
+            // The code didn't round-trip; the fallback is still a usable label.
+        }
+        return fallback;
     }
 }

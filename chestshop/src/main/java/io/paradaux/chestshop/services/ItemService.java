@@ -41,8 +41,18 @@ public interface ItemService {
     /** Resolve the material part of an item code (vanilla material lookup), or {@code null}. */
     Material parseMaterial(String materialString, short data);
 
-    /** A comma-joined "count name" list for a set of stacks (used in trade/give messages). */
+    /** A comma-joined "count display-name" list for a set of stacks (used in trade/give messages). */
     String getItemList(ItemStack[] items);
+
+    /**
+     * The name to show a person for an item, wherever it is not being written to a sign: the
+     * custom-item name or configured alias if it has one, else the potion/enchanted-book
+     * shorthand, else {@link #getName(ItemStack)}.
+     *
+     * <p>Display only. It is not an identity: market item keys, wildcard matching and per-item
+     * permissions keep using {@link #getName(ItemStack)} / {@link #wildcardName}.
+     */
+    String getDisplayName(ItemStack item);
 
     /** Stable provider ID, or null for ordinary items. */
     default String customItemId(ItemStack item) {

@@ -92,6 +92,7 @@ class InfoServiceImplTest extends ServerTest {
         sender = mock(CommandSender.class);
         lenient().when(message.component(anyString(), any(Map.class))).thenReturn(Component.text("x"));
         lenient().when(items.getName(any())).thenReturn("Name");
+        lenient().when(items.getDisplayName(any())).thenReturn("Readable Name");
         info = new InfoServiceImpl(accounts, economy, items, message, signService, shopBlockService, inventoryService);
     }
 
@@ -556,7 +557,7 @@ class InfoServiceImplTest extends ServerTest {
         info.showShopInfo(p, sign);
 
         assertThat(shopInfoValues())
-                .containsEntry("item", "Name")
+                .containsEntry("item", "Readable Name")
                 .containsEntry("stock", "42")
                 .containsEntry("owner", "Owner Display")
                 .containsEntry("prices", "B 10 : S 5")

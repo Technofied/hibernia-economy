@@ -209,6 +209,10 @@ public class MarketServiceImpl implements MarketService {
                 }
             }
         }
+        String readable = readableName(item, canonical);
+        if (readable != null) {
+            return readable;
+        }
         if (custom) {
             String code = canonical;
             if (code != null && !code.isBlank()) {
@@ -216,6 +220,20 @@ public class MarketServiceImpl implements MarketService {
             }
         }
         return pretty(item.getType().name());
+    }
+
+    /**
+     * The item's display name when it says more than its key does (a potion/enchanted-book
+     * shorthand such as "Spl Healing II"), else {@code null}. Used verbatim: the key is
+     * prettified below, which would mangle a shorthand's tier and capitals.
+     */
+    private String readableName(ItemStack item, String canonical) {
+        try {
+            String name = items.getDisplayName(item);
+            return name == null || name.isBlank() || name.equals(canonical) ? null : name;
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /** "DIAMOND_SWORD" / "nexo:ruby_sword#02" -> "Diamond Sword" / "Ruby Sword". */
