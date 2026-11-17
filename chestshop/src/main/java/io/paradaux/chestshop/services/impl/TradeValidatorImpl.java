@@ -27,6 +27,7 @@ import io.paradaux.chestshop.services.AccountService;
 import io.paradaux.chestshop.services.AdminBypassService;
 import io.paradaux.chestshop.services.EconomyService;
 import io.paradaux.chestshop.services.InventoryService;
+import io.paradaux.chestshop.services.ItemCodeService;
 import io.paradaux.chestshop.services.ItemService;
 import io.paradaux.chestshop.services.PartialFillCalculator;
 import io.paradaux.chestshop.services.RestrictedSignService;
@@ -34,6 +35,7 @@ import io.paradaux.chestshop.services.SignBreakService;
 import io.paradaux.chestshop.services.SignService;
 import io.paradaux.chestshop.services.TradeValidator;
 import io.paradaux.chestshop.services.WildcardItems;
+import io.paradaux.chestshop.utils.MaterialUtil;
 import io.paradaux.chestshop.utils.MessageUtil;
 import io.paradaux.chestshop.utils.Permissions;
 import io.paradaux.chestshop.utils.PriceUtil;
@@ -73,6 +75,7 @@ public class TradeValidatorImpl implements TradeValidator {
     private final SignBreakService signBreak;
     private final Message message;
     private final ItemService items;
+    private final ItemCodeService itemCodes;
     private final ChestShopConfiguration config;
     private final SignService signService;
     private final InventoryService inventoryService;
@@ -90,6 +93,7 @@ public class TradeValidatorImpl implements TradeValidator {
             SignBreakService signBreak,
             Message message,
             ItemService items,
+            ItemCodeService itemCodes,
             ChestShopConfiguration config,
             SignService signService,
             InventoryService inventoryService,
@@ -102,6 +106,7 @@ public class TradeValidatorImpl implements TradeValidator {
                 signBreak,
                 message,
                 items,
+                itemCodes,
                 config,
                 signService,
                 inventoryService,
@@ -118,6 +123,7 @@ public class TradeValidatorImpl implements TradeValidator {
             SignBreakService signBreak,
             Message message,
             ItemService items,
+            ItemCodeService itemCodes,
             ChestShopConfiguration config,
             SignService signService,
             InventoryService inventoryService,
@@ -130,6 +136,7 @@ public class TradeValidatorImpl implements TradeValidator {
         this.signBreak = signBreak;
         this.message = message;
         this.items = items;
+        this.itemCodes = itemCodes;
         this.config = config;
         this.signService = signService;
         this.inventoryService = inventoryService;
@@ -322,7 +329,13 @@ public class TradeValidatorImpl implements TradeValidator {
             return;
         }
 
+        String itemNodePrefix = buy ? Permissions.BUY_ID : Permissions.SELL_ID;
         for (ItemStack stock : ctx.getStock()) {
+            // Display text can hide the stored identity; item-specific denials must not.
+            if (deniedByStoredCode(client, itemNodePrefix, stock)) {
+                ctx.setCancelled(CLIENT_DOES_NOT_HAVE_PERMISSION);
+                return;
+            }
             if (WildcardItems.isPattern(itemLine)) {
                 String selectedCode = items.getName(stock);
                 if (selectedCode != null
@@ -345,6 +358,22 @@ public class TradeValidatorImpl implements TradeValidator {
                 return;
             }
         }
+    }
+
+    /**
+     * Whether the client is explicitly denied this exact item. The sign line is display text
+     * (a shorthand, alias, custom name or wildcard) and need not contain the item's stored
+     * {@code #code}, so the denial is looked up by the stored code itself: in full, and in the
+     * sign-width form a sign showing the code would carry.
+     */
+    private boolean deniedByStoredCode(Player client, String nodePrefix, ItemStack stock) {
+        String fullCode = itemCodes.encode(stock, 0);
+        String signCode = itemCodes.encode(stock, MaterialUtil.MAXIMUM_SIGN_WIDTH);
+        return isDenied(client, nodePrefix, fullCode) || isDenied(client, nodePrefix, signCode);
+    }
+
+    private static boolean isDenied(Player client, String nodePrefix, String code) {
+        return code != null && code.contains("#") && Permissions.hasPermissionSetFalse(client, nodePrefix + code);
     }
 
     /** Cancel if the receiving inventory (chest on SELL, client on BUY) can't hold the stock. */

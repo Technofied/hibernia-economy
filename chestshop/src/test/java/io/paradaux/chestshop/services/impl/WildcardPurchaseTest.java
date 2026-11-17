@@ -83,6 +83,7 @@ class WildcardPurchaseTest extends ServerTest {
                 mock(SignBreakService.class),
                 message,
                 items,
+                mock(io.paradaux.chestshop.services.ItemCodeService.class),
                 config,
                 signs,
                 inventory,

@@ -61,6 +61,7 @@ class TradeValidatorTest {
     private SignBreakService signBreak;
     private Message message;
     private ItemService items;
+    private io.paradaux.chestshop.services.ItemCodeService itemCodes;
     private ChestShopConfiguration config;
     private SignService signService;
     private InventoryService inventoryService;
@@ -80,6 +81,7 @@ class TradeValidatorTest {
         signBreak = mock(SignBreakService.class);
         message = mock(Message.class);
         items = mock(ItemService.class);
+        itemCodes = mock(io.paradaux.chestshop.services.ItemCodeService.class);
         config = mock(ChestShopConfiguration.class);
         signService = mock(SignService.class);
         inventoryService = mock(InventoryService.class);
@@ -105,6 +107,7 @@ class TradeValidatorTest {
                 signBreak,
                 message,
                 items,
+                itemCodes,
                 config,
                 signService,
                 inventoryService,
@@ -553,6 +556,38 @@ class TradeValidatorTest {
             perms.when(() -> io.paradaux.chestshop.utils.Permissions.hasPermissionSetFalse(eq(client), any()))
                     .thenReturn(true);
             PendingTransaction ctx = wholeTradeCtx(BUY, client);
+            validator.validate(ctx);
+            assertThat(ctx.getTransactionOutcome()).isEqualTo(TransactionOutcome.CLIENT_DOES_NOT_HAVE_PERMISSION);
+        }
+    }
+
+    /**
+     * A sign need not show the stored code: it can read "Bk Sharpness V", an alias or a custom
+     * name. An item-specific denial is written against the stored code and must still apply.
+     */
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+        "BUY, ChestShop.shop.buy.Enchanted Book#Eg, 0",
+        "SELL, ChestShop.shop.sell.Enchanted Book#Eg, 0",
+        // The form an older sign for this item showed, shortened to fit the line.
+        "BUY, ChestShop.shop.buy.EnchantedBook#Eg, 1",
+    })
+    void validate_storedCodeDenialAppliesWhenTheSignShowsAReadableName(
+            Transaction.TransactionType type, String deniedNode, int widthLimited) {
+        Player client = player("Notch", UUID.randomUUID());
+        setupWholeTradeConfig();
+        economy.hasFunds = (u, a) -> true;
+        when(inventoryService.hasItems(any(), any())).thenReturn(true);
+        when(itemCodes.encode(any(), eq(0))).thenReturn("Enchanted Book#Eg");
+        when(itemCodes.encode(any(), eq(io.paradaux.chestshop.utils.MaterialUtil.MAXIMUM_SIGN_WIDTH)))
+                .thenReturn(widthLimited == 1 ? "EnchantedBook#Eg" : "Enchanted Book#Eg");
+        try (MockedStatic<SignService> ss = mockStatic(SignService.class);
+                MockedStatic<io.paradaux.chestshop.utils.Permissions> perms =
+                        mockStatic(io.paradaux.chestshop.utils.Permissions.class)) {
+            ss.when(() -> SignService.getItem(any(Sign.class))).thenReturn("Bk Sharpness V");
+            perms.when(() -> io.paradaux.chestshop.utils.Permissions.hasPermissionSetFalse(client, deniedNode))
+                    .thenReturn(true);
+            PendingTransaction ctx = wholeTradeCtx(type, client);
             validator.validate(ctx);
             assertThat(ctx.getTransactionOutcome()).isEqualTo(TransactionOutcome.CLIENT_DOES_NOT_HAVE_PERMISSION);
         }
