@@ -116,8 +116,13 @@ custom-brewed potions, books above the normal maximum level, and books combined 
 anvil (they carry a repair cost, so they are a different item from a plain book). Signs
 made before these names existed keep working unchanged.
 
-The short name is only what the sign shows. Chat messages, `/find` and wildcard signs
-(such as `Potion*`) still use the full `Name#code` form.
+The short name is used wherever an item is shown: on the sign, in `/shopinfo`, in trade
+messages, in the `/find` title, results and suggestions, and on the Explorer. You can type
+it into `/find`. Shops and sales recorded before this keep their older name until the shop
+is next seen by the server (`/find resync` refreshes loaded areas); past sales keep theirs.
+
+Two things still use the full `Name#code` form, because it identifies the exact item:
+wildcard signs (such as `Potion*`) and the **Full Name** line in `/iteminfo`.
 
 > [!TIP]
 > Not sure what an item is called? Hold it and run `/iteminfo`. You can also look one up

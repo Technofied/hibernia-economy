@@ -297,7 +297,14 @@ Treasury and Business so a sale can pay a player or a firm.
   and in `queryString` only for sign-width requests. Configured code aliases still take
   precedence over shorthands. The unlimited-width name remains the market `item_key` and
   wildcard match target. Creation permissions use `ItemCodeService` directly so aliases
-  and shorthands cannot hide item-specific denials. Names are in code, not config,
+  and shorthands cannot hide item-specific denials. **Display vs identity (PAR-569):**
+  `ItemService.getDisplayName` is the name shown to a person off the sign (custom name
+  or alias, else the shorthand, else `getName`). `/shopinfo`, trade and refusal messages
+  (`getItemList`), `/chestshop give`, the sale's ledger memo, the registry `item_name`
+  and the `/find` title and suggestions use it. `getName`/`wildcardName` stay the
+  identity for `item_key`, wildcards, permission suffixes, the shop log and
+  `/iteminfo`'s Full Name; never key on a display name. Stored `item_name` values change
+  only when a shop is re-observed or a new sale is recorded. Names are in code, not config,
   because a name is persisted on every sign that uses it;
   renaming one strands those signs. An item gets a shorthand only if
   `MaterialService.equals` matches it to the plain item the name parses back to, which
